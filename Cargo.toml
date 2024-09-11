@@ -1,0 +1,17 @@
+[package]
+name = "shoot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "0.14.1", features = ["dynamic_linking"] }
+bevy_egui = "0.29"
+voronoice = "0.2.0"
+rand = "0.8.5"
+
+# Use LLD for link
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
