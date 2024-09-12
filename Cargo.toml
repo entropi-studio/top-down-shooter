@@ -10,6 +10,7 @@ bevy = { version = "0.14.1", features = ["dynamic_linking"] }
 bevy_egui = "0.29"
 voronoice = "0.2.0"
 rand = "0.8.5"
+bevy_light_2d = "0.3"
 
 # Use LLD for link
 [target.x86_64-unknown-linux-gnu]
