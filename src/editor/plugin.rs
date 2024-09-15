@@ -1,9 +1,14 @@
 use crate::editor::{
-    EditorObjectPosition, EditorObjectPositionSnap, EditorObjectSize, EditorObjectSizeRange,
-    EditorObjectSizeSnap, EditorObjectsPlugin, EditorWallBundle,
+    EditorLampBundle, EditorObject, EditorObjectPosition, EditorObjectPositionSnap,
+    EditorObjectSize, EditorObjectSizeRange, EditorObjectSizeSnap, EditorObjectsPlugin, EditorWall,
+    EditorWallBundle,
 };
+use crate::level::LevelObject::Wall;
+use crate::state::GameState;
+use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
+use bevy::transform::commands;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
 
@@ -24,7 +29,7 @@ impl Plugin for ShootEditorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EditorObjectsPlugin)
             .insert_resource(EditorState { ..default() })
-            .add_systems(Startup, init)
+            .add_systems(OnEnter(GameState::Editor), init)
             .add_systems(
                 Update,
                 (
@@ -32,7 +37,8 @@ impl Plugin for ShootEditorPlugin {
                     update_object_positions,
                     update_object_sizes,
                     update_object_rotations,
-                ),
+                )
+                    .run_if(in_state(GameState::Editor)),
             );
 
         return;
@@ -41,16 +47,18 @@ impl Plugin for ShootEditorPlugin {
 
 fn init(mut commands: Commands) {
     commands.spawn((
-        EditorWallBundle {
-            position_snap: EditorObjectPositionSnap(Vec2::new(20.0, 20.0)),
-            ..default()
-        },
+        EditorWallBundle::default(),
         EditorObjectSizeSnap(Vec2::new(1.0, 1.0)),
         EditorObjectSizeRange::with_min(Vec2::ONE),
     ));
 }
 
-fn update_interface(mut contexts: EguiContexts, mut state: ResMut<EditorState>) {
+fn update_interface(
+    mut contexts: EguiContexts,
+    mut state: ResMut<EditorState>,
+    mut query_editor_objects: Query<(Entity), With<EditorObject>>,
+    mut commands: Commands,
+) {
     egui::SidePanel::left("Editor Panel Left")
         .resizable(true)
         .show(contexts.ctx_mut(), |ui| {
@@ -61,6 +69,36 @@ fn update_interface(mut contexts: EguiContexts, mut state: ResMut<EditorState>) 
             if ui.button("Write level").clicked() {
                 state.write_level_dialog.open = true;
             }
+
+            ui.group(|ui| {
+                ui.heading("Build Objects");
+
+                fn change_build_object<T: Bundle>(
+                    commands: &mut Commands,
+                    editor_objects: QueryIter<Entity, With<EditorObject>>,
+                    bundle: T,
+                ) {
+                    for editor_object in editor_objects {
+                        commands.entity(editor_object).despawn();
+                    }
+
+                    commands.spawn(bundle);
+                }
+
+                if ui.button("Wall").clicked() {
+                    change_build_object(
+                        &mut commands,
+                        query_editor_objects.iter_mut(),
+                        EditorWallBundle::default(),
+                    );
+                } else if ui.button("Lamp").clicked() {
+                    change_build_object(
+                        &mut commands,
+                        query_editor_objects.iter_mut(),
+                        EditorLampBundle::default(),
+                    );
+                }
+            });
 
             ui.allocate_rect(ui.available_rect_before_wrap(), egui::Sense::hover());
         });

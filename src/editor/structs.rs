@@ -2,6 +2,9 @@ use bevy::math::{Quat, Vec2};
 use bevy::prelude::Component;
 
 #[derive(Component, Default)]
+pub struct EditorObject;
+
+#[derive(Component, Default)]
 pub struct EditorObjectPosition(pub Vec2);
 
 #[derive(Component, Default)]
