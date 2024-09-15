@@ -1,12 +1,19 @@
-use crate::level::serializers::wall::serialize_wall;
+use crate::level::serializers::wall::deserialize_wall;
 use crate::level::{DeserializeLevelObject, SerializeLevelObject};
 use bevy::math::Vec2;
+use bevy::prelude::Component;
 
+#[derive(Component, Copy, Clone)]
 pub enum LevelObject {
     Wall {
         size: Vec2,
         position: Vec2,
         rotation: f32,
+    },
+    Lamp {
+        radius: f32,
+        intensity: f32,
+        falloff: f32,
     },
 }
 
@@ -27,6 +34,7 @@ impl SerializeLevelObject for LevelObject {
                     rotation.to_string(),
                 ],
             ),
+            _ => panic!(),
         }
     }
 }
@@ -34,7 +42,7 @@ impl SerializeLevelObject for LevelObject {
 impl DeserializeLevelObject for LevelObject {
     fn deserialize(statement: String, args: Vec<String>) -> Result<Self, String> {
         match statement.as_str() {
-            "Wall" => serialize_wall(args),
+            "Wall" => deserialize_wall(args),
             _ => Err(format!(
                 "[#LevelObject::deserialize] unknown statement: {}",
                 statement

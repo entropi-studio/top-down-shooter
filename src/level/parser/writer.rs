@@ -1,6 +1,6 @@
 use crate::level::{LevelObject, SerializeLevelObject};
 
-pub fn write_level(objects: Vec<LevelObject>) {
+pub fn write_level(objects: Vec<LevelObject>) -> String {
     let mut content = String::new();
     for object in objects {
         let (statement, args) = object.serialize();
@@ -14,4 +14,6 @@ pub fn write_level(objects: Vec<LevelObject>) {
             .join(" ");
         content += format!("{statement} {args}\n").as_str();
     }
+
+    content
 }

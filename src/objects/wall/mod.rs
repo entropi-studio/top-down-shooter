@@ -1,3 +1,4 @@
+use crate::objects::GameObject;
 use bevy::color::color_difference::EuclideanDistance;
 use bevy::ecs::observer::TriggerTargets;
 use bevy::math::{Quat, Vec3, VectorSpace};
@@ -7,6 +8,7 @@ use bevy::utils::default;
 use bevy_light_2d::occluder::LightOccluder2dShape;
 use bevy_light_2d::prelude::LightOccluder2d;
 use rand::Rng;
+use crate::level::LevelObject;
 
 pub struct WallObjectPlugin;
 
@@ -29,8 +31,9 @@ struct WallObjectAnimated {
 pub struct WallObjectBundle {
     mesh: ColorMesh2dBundle,
     occluder: LightOccluder2d,
-    object: WallObject,
     animated: WallObjectAnimated,
+    object: WallObject,
+    level_object: LevelObject,
 }
 
 impl WallObjectBundle {
@@ -58,14 +61,19 @@ impl WallObjectBundle {
             },
             occluder: LightOccluder2d {
                 shape: LightOccluder2dShape::Rectangle {
-                    half_size: size / 2.0
-                }
+                    half_size: size / 2.0,
+                },
             },
-            object: Default::default(),
             animated: WallObjectAnimated {
                 current_color: color_initial,
                 current_scale: scale_initial,
                 to_color: Color::WHITE,
+            },
+            object: WallObject,
+            level_object: LevelObject::Wall {
+                size,
+                position,
+                rotation,
             },
         }
     }

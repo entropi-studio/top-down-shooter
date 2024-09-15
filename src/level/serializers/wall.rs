@@ -1,7 +1,7 @@
 use crate::level::LevelObject;
 use bevy::prelude::Vec2;
 
-pub(in super::super) fn serialize_wall(args: Vec<String>) -> Result<LevelObject, String> {
+pub(in super::super) fn deserialize_wall(args: Vec<String>) -> Result<LevelObject, String> {
     if args.len() != 5 {
         return Err(format!(
             "[#LevelObject::deserialize] Wall: expected 5 arguments but got {}",

@@ -1,14 +1,13 @@
 use crate::editor::{
     EditorLampBundle, EditorObject, EditorObjectPosition, EditorObjectPositionSnap,
-    EditorObjectSize, EditorObjectSizeRange, EditorObjectSizeSnap, EditorObjectsPlugin, EditorWall,
+    EditorObjectSize, EditorObjectSizeRange, EditorObjectSizeSnap, EditorObjectsPlugin,
     EditorWallBundle,
 };
-use crate::level::LevelObject::Wall;
+use crate::level::{write_level, LevelObject};
 use crate::state::GameState;
 use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::transform::commands;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
 
@@ -22,6 +21,9 @@ struct EditorState {
     level_name: String,
     write_level_dialog: WriteLevelDialogState,
 }
+
+#[derive(Event)]
+struct WriteLevel;
 
 pub struct ShootEditorPlugin;
 
@@ -39,7 +41,8 @@ impl Plugin for ShootEditorPlugin {
                     update_object_rotations,
                 )
                     .run_if(in_state(GameState::Editor)),
-            );
+            )
+            .observe(on_write_level);
 
         return;
     }
@@ -113,6 +116,7 @@ fn update_interface(
                 }
 
                 if ui.button("Write").clicked() {
+                    commands.trigger(WriteLevel);
                     state.write_level_dialog.open = false;
                 }
             });
@@ -227,3 +231,12 @@ fn update_object_sizes(
 }
 
 fn update_object_rotations() {}
+
+fn on_write_level(
+    trigger: Trigger<WriteLevel>,
+    mut commands: Commands,
+    mut query_level_objects: Query<(&LevelObject)>,
+) {
+    let vec = query_level_objects.iter().map(|x| *x).collect::<Vec<_>>();
+    println!("@WRITE LEVEL@\n{}", write_level(vec));
+}

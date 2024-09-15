@@ -1,3 +1,5 @@
+use crate::level::LevelObject;
+use crate::objects::GameObject;
 use bevy::color::color_difference::EuclideanDistance;
 use bevy::ecs::observer::TriggerTargets;
 use bevy::math::{Quat, Vec3, VectorSpace};
@@ -22,6 +24,7 @@ pub struct LampObject;
 pub struct LampObjectBundle {
     light: PointLight2dBundle,
     object: LampObject,
+    level_object: LevelObject,
 }
 
 impl LampObjectBundle {
@@ -38,6 +41,11 @@ impl LampObjectBundle {
                 ..default()
             },
             object: LampObject,
+            level_object: LevelObject::Lamp {
+                radius,
+                intensity,
+                falloff: 0.0,
+            },
         }
     }
 }
