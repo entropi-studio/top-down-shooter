@@ -3,31 +3,46 @@ use crate::editor::{
     EditorObjectSize, EditorObjectSizeRange, EditorObjectSizeSnap, EditorObjectsPlugin,
     EditorWallBundle,
 };
-use crate::level::{write_level, LevelObject};
+use crate::level::{write_level, write_level_to_data, LevelObject};
+use crate::render::MainCamera;
 use crate::state::GameState;
 use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
+use bevy_infinite_grid::InfiniteGridBundle;
+use lighting::prelude::AmbientLight2d;
 
 #[derive(Default)]
 struct WriteLevelDialogState {
     open: bool,
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 struct EditorState {
     level_name: String,
     write_level_dialog: WriteLevelDialogState,
+    snap_enabled: bool,
+}
+
+impl Default for EditorState {
+    fn default() -> Self {
+        Self {
+            level_name: "".to_string(),
+            write_level_dialog: WriteLevelDialogState::default(),
+            snap_enabled: true,
+        }
+    }
 }
 
 #[derive(Event)]
-struct WriteLevel;
+struct WriteLevel(String);
 
-pub struct ShootEditorPlugin;
+pub struct EditorPlugin;
 
-impl Plugin for ShootEditorPlugin {
+impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EditorObjectsPlugin)
             .insert_resource(EditorState { ..default() })
@@ -49,11 +64,12 @@ impl Plugin for ShootEditorPlugin {
 }
 
 fn init(mut commands: Commands) {
-    commands.spawn((
-        EditorWallBundle::default(),
-        EditorObjectSizeSnap(Vec2::new(1.0, 1.0)),
-        EditorObjectSizeRange::with_min(Vec2::ONE),
-    ));
+    commands.spawn((EditorWallBundle::default()));
+
+    commands.spawn(AmbientLight2d {
+        color: Color::WHITE,
+        brightness: 0.0,
+    });
 }
 
 fn update_interface(
@@ -72,6 +88,19 @@ fn update_interface(
             if ui.button("Write level").clicked() {
                 state.write_level_dialog.open = true;
             }
+
+            ui.group(|ui| {
+                ui.heading("Snapping");
+                if if state.snap_enabled {
+                    ui.button("Turn off snapping")
+                } else {
+                    ui.button("Turn off snapping")
+                }
+                .clicked()
+                {
+                    state.snap_enabled = !state.snap_enabled;
+                }
+            });
 
             ui.group(|ui| {
                 ui.heading("Build Objects");
@@ -116,7 +145,7 @@ fn update_interface(
                 }
 
                 if ui.button("Write").clicked() {
-                    commands.trigger(WriteLevel);
+                    commands.trigger(WriteLevel(state.level_name.clone()));
                     state.write_level_dialog.open = false;
                 }
             });
@@ -125,11 +154,14 @@ fn update_interface(
 }
 
 fn update_object_positions(
+    state: Res<EditorState>,
     mut query: Query<(&mut EditorObjectPosition, Option<&EditorObjectPositionSnap>)>,
-    query_camera: Query<(&Camera, &GlobalTransform)>,
+    query_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     query_window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let (camera, camera_transform) = query_camera.single();
+    let Ok((camera, camera_transform)) = query_camera.get_single() else {
+        return;
+    };
     let Ok(window) = query_window.get_single() else {
         return;
     };
@@ -146,19 +178,23 @@ fn update_object_positions(
     let projection = Vec2::new(projection.x, projection.y);
 
     for (mut position, snap) in query.iter_mut() {
-        if let Some(EditorObjectPositionSnap(snap)) = snap {
-            let mut projection = projection;
-            if *snap == Vec2::ZERO {
-            } else if snap.x == 0.0 {
-                projection.y = (projection.y / snap.y).round() * snap.y;
-            } else if snap.y == 0.0 {
-                projection.x = (projection.x / snap.x).round() * snap.x;
-            } else {
-                projection = (projection / *snap).round() * *snap;
-            }
-            position.0 = projection;
+        if !state.snap_enabled {
+            position.0 = projection
         } else {
-            position.0 = projection;
+            if let Some(EditorObjectPositionSnap(snap)) = snap {
+                let mut projection = projection;
+                if *snap == Vec2::ZERO {
+                } else if snap.x == 0.0 {
+                    projection.y = (projection.y / snap.y).round() * snap.y;
+                } else if snap.y == 0.0 {
+                    projection.x = (projection.x / snap.x).round() * snap.x;
+                } else {
+                    projection = (projection / *snap).round() * *snap;
+                }
+                position.0 = projection;
+            } else {
+                position.0 = projection;
+            }
         }
     }
 }
@@ -238,5 +274,5 @@ fn on_write_level(
     mut query_level_objects: Query<(&LevelObject)>,
 ) {
     let vec = query_level_objects.iter().map(|x| *x).collect::<Vec<_>>();
-    println!("@WRITE LEVEL@\n{}", write_level(vec));
+    write_level_to_data(trigger.event().0.clone(), vec);
 }

@@ -1,0 +1,23 @@
+[package]
+name = "lighting"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", default-features = false, features = [
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_winit",
+    "x11",
+] }
+smallvec = "1.13"
+
+[dev-dependencies]
+bevy = { version = "0.14", default-features = false, features = [
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_winit",
+    "bevy_sprite",
+    "png",
+    "x11"
+] }

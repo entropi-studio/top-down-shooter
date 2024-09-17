@@ -1,6 +1,6 @@
 use crate::editor::{
     EditorObject, EditorObjectPosition, EditorObjectPositionSnap, EditorObjectRotation,
-    EditorObjectSize,
+    EditorObjectSize, EditorObjectSizeRange,
 };
 use crate::objects::{WallObject, WallObjectBundle};
 use bevy::color::palettes::basic::RED;
@@ -13,12 +13,20 @@ use bevy_egui::{egui, EguiContexts};
 use std::f32::consts::PI;
 use std::fmt::format;
 
+#[derive(Default)]
+enum WallCornerType {
+    None,
+    #[default]
+    Sharp,
+}
+
 #[derive(Component, Default)]
 pub struct EditorWall {
     from_position: Option<Vec2>,
     to_position: Vec2,
     current_size: Vec2,
     thickness: f32,
+    corner_type: WallCornerType,
 }
 
 #[derive(Bundle)]
@@ -26,6 +34,7 @@ pub struct EditorWallBundle {
     pub position: EditorObjectPosition,
     pub position_snap: EditorObjectPositionSnap,
     pub size: EditorObjectSize,
+    pub size_range: EditorObjectSizeRange,
     pub wall: EditorWall,
     pub editor_object: EditorObject,
 }
@@ -36,6 +45,7 @@ impl Default for EditorWallBundle {
             position: EditorObjectPosition::default(),
             position_snap: EditorObjectPositionSnap(Vec2::new(20.0, 20.0)),
             size: EditorObjectSize::default(),
+            size_range: EditorObjectSizeRange::with_min(Vec2::splat(2.0)),
             wall: EditorWall::default(),
             editor_object: EditorObject,
         }
@@ -45,7 +55,8 @@ impl Default for EditorWallBundle {
 pub struct EditorWallPlugin;
 impl Plugin for EditorWallPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (wall_init, wall_update));
+        app.add_systems(Update, wall_interface)
+            .add_systems(Update, (wall_init, wall_update));
     }
 }
 
@@ -64,25 +75,12 @@ fn wall_init(
     }
 }
 
-fn wall_update(
-    mut query: Query<(
-        &mut EditorWall,
-        &mut Transform,
-        &Mesh2dHandle,
-        &EditorObjectPosition,
-        &EditorObjectSize,
-    )>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    input_mouse: Res<ButtonInput<MouseButton>>,
-    time: Res<Time>,
-    mut commands: Commands,
+fn wall_interface(
+    mut query: Query<(&mut EditorWall, &EditorObjectPosition, &EditorObjectSize)>,
     mut gizmos: Gizmos,
     mut contexts: EguiContexts,
 ) {
-    for (mut wall, mut transform, mesh, EditorObjectPosition(position), EditorObjectSize(size)) in
-        query.iter_mut()
-    {
+    for (mut wall, EditorObjectPosition(position), EditorObjectSize(size)) in query.iter_mut() {
         egui::Window::new("[Placing] Wall").show(contexts.ctx_mut(), |ui| {
             if let Some(start_position) = wall.from_position {
                 gizmos.circle_2d(start_position, 1.0, DARK_CYAN);
@@ -106,7 +104,33 @@ fn wall_update(
             }
             ui.label(format!("Thickness: {:^10}", size.x));
         });
+    }
+}
 
+fn wall_update(
+    mut query: Query<(
+        &mut EditorWall,
+        &mut Transform,
+        &Mesh2dHandle,
+        &EditorObjectPosition,
+        &EditorObjectSize,
+    )>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    input_mouse: Res<ButtonInput<MouseButton>>,
+    time: Res<Time>,
+    mut commands: Commands,
+    mut egui_contexts: EguiContexts,
+) {
+    if let Some(ctx_mut) = egui_contexts.try_ctx_mut() {
+        if ctx_mut.wants_pointer_input() {
+            return;
+        }
+    }
+
+    for (mut wall, mut transform, mesh, EditorObjectPosition(position), EditorObjectSize(size)) in
+        query.iter_mut()
+    {
         let interpolation = time.delta_seconds() * 10.0;
         let mut wall_size = Vec2::ZERO;
         let mut should_interpolate_wall_size = false;
@@ -179,40 +203,6 @@ fn wall_update(
                 wall.current_size = wall_size;
             }
             *mesh = Rectangle::from_size(wall.current_size).into();
-        }
-    }
-}
-
-fn wall_handle_place(
-    mut commands: Commands,
-    query: Query<
-        (
-            &EditorObjectPosition,
-            &EditorObjectSize,
-            &EditorObjectRotation,
-        ),
-        With<EditorWall>,
-    >,
-    query_walls: Query<Entity, With<WallObject>>,
-    input_mouse: Res<ButtonInput<MouseButton>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    if input_mouse.pressed(MouseButton::Left) {
-        for (
-            EditorObjectPosition(position),
-            EditorObjectSize(size),
-            EditorObjectRotation(rotation),
-        ) in query.iter()
-        {
-            commands.spawn(WallObjectBundle::new(
-                *position,
-                *size * 20.0,
-                *rotation,
-                query_walls.iter().count() as f32,
-                &mut meshes,
-                &mut materials,
-            ));
         }
     }
 }

@@ -1,15 +1,8 @@
 use crate::level::LevelObject;
-use crate::objects::GameObject;
-use bevy::color::color_difference::EuclideanDistance;
-use bevy::ecs::observer::TriggerTargets;
-use bevy::math::{Quat, Vec3, VectorSpace};
+use bevy::math::Vec3;
 use bevy::prelude::*;
-use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::default;
-use bevy_light_2d::light::{PointLight2d, PointLight2dBundle};
-use bevy_light_2d::occluder::LightOccluder2dShape;
-use bevy_light_2d::prelude::LightOccluder2d;
-use rand::Rng;
+use lighting::prelude::{PointLight2d, PointLight2dBundle};
 
 pub struct LampObjectPlugin;
 
@@ -32,8 +25,8 @@ impl LampObjectBundle {
         Self {
             light: PointLight2dBundle {
                 point_light: PointLight2d {
-                    radius,
                     intensity,
+                    radius,
                     cast_shadows: true,
                     ..default()
                 },

@@ -1,14 +1,8 @@
-use crate::objects::GameObject;
-use bevy::color::color_difference::EuclideanDistance;
-use bevy::ecs::observer::TriggerTargets;
+use crate::level::LevelObject;
 use bevy::math::{Quat, Vec3, VectorSpace};
 use bevy::prelude::*;
-use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::default;
-use bevy_light_2d::occluder::LightOccluder2dShape;
-use bevy_light_2d::prelude::LightOccluder2d;
-use rand::Rng;
-use crate::level::LevelObject;
+use lighting::prelude::{LightOccluder2d, LightOccluder2dShape};
 
 pub struct WallObjectPlugin;
 
