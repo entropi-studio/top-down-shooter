@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::window::PresentMode;
 use bevy::DefaultPlugins;
 use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use ui_toolkit::plugin::UiToolkitPlugin;
 
 pub struct BasePlugin;
@@ -22,6 +23,7 @@ impl Plugin for BasePlugin {
         }))
         .add_plugins(EguiPlugin)
         .add_plugins(UiToolkitPlugin)
+            .add_plugins(WorldInspectorPlugin::new())
         // .add_plugins((
         //     FrameTimeDiagnosticsPlugin::default(),
         //     LogDiagnosticsPlugin::default(),

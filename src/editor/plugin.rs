@@ -3,16 +3,14 @@ use crate::editor::{
     EditorObjectSize, EditorObjectSizeRange, EditorObjectSizeSnap, EditorObjectsPlugin,
     EditorWallBundle,
 };
-use crate::level::{write_level, write_level_to_data, LevelObject};
+use crate::level::{write_level_to_data, LevelObject};
 use crate::render::MainCamera;
 use crate::state::GameState;
 use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::sprite::MaterialMesh2dBundle;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
-use bevy_infinite_grid::InfiniteGridBundle;
 use lighting::prelude::AmbientLight2d;
 
 #[derive(Default)]

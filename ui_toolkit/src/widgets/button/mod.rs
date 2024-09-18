@@ -1,5 +1,7 @@
 use crate::ui::StyleBuilderExt;
+use bevy::color::palettes::basic::GRAY;
 use bevy::prelude::*;
+use sickle_ui::ease::Ease;
 use sickle_ui::prelude::*;
 
 pub struct ToolkitButtonWidgetPlugin;
@@ -34,8 +36,39 @@ impl ToolkitButtonWidget {
             .align_items(AlignItems::Center)
             .padding(UiRect::all(Val::Px(8.0)))
             .border(UiRect::all(Val::Px(2.0)))
-            .border_radius(BorderRadius::all(Val::Px(20.0)))
+            .border_radius(BorderRadius::all(Val::Px(16.0)))
             .border_color(colors.on_surface);
+        style_builder
+            .animated()
+            .scale(AnimatedVals {
+                idle: 1.0,
+                press: Some(0.95),
+                ..default()
+            })
+            .copy_from(theme_data.interaction_animation)
+            .pointer_enter(0.3, Ease::OutCubic, None)
+            .pointer_leave(0.3, Ease::OutCubic, None)
+            .non_interacted(0.3, Ease::OutCubic, None)
+            .cancel(0.3, Ease::OutCubic, None)
+            .cancel_reset(0.3, Ease::OutCubic, None)
+            .press(0.3, Ease::OutCubic, None)
+            .release(0.3, Ease::OutCubic, None);
+        style_builder
+            .animated()
+            .background_color(AnimatedVals {
+                idle: Color::WHITE.with_alpha(0.0),
+                hover: Some(Color::WHITE.with_alpha(0.05)),
+                press: Some(Color::WHITE.with_alpha(0.1)),
+                ..default()
+            })
+            .copy_from(theme_data.interaction_animation)
+            .pointer_enter(0.3, Ease::OutCubic, None)
+            .pointer_leave(0.3, Ease::OutCubic, None)
+            .non_interacted(0.3, Ease::OutCubic, None)
+            .cancel(0.3, Ease::OutCubic, None)
+            .cancel_reset(0.3, Ease::OutCubic, None)
+            .press(0.3, Ease::OutCubic, None)
+            .release(0.3, Ease::OutCubic, None);
     }
 }
 
@@ -44,6 +77,12 @@ pub trait UiToolkitButtonWidgetExt {
         &mut self,
         spawn_children: impl FnOnce(&mut UiBuilder<Entity>),
     ) -> UiBuilder<'_, Entity>;
+
+    fn toolkit_text_button(&mut self, text: impl Into<TextBundle>) -> UiBuilder<'_, Entity> {
+        self.toolkit_button(|builder| {
+            builder.spawn(text.into());
+        })
+    }
 }
 
 impl UiToolkitButtonWidgetExt for UiBuilder<'_, Entity> {
@@ -51,6 +90,13 @@ impl UiToolkitButtonWidgetExt for UiBuilder<'_, Entity> {
         &mut self,
         spawn_children: impl FnOnce(&mut UiBuilder<Entity>),
     ) -> UiBuilder<'_, Entity> {
-        self.container((ButtonBundle::default(), ToolkitButtonWidget), spawn_children)
+        self.container(
+            (
+                ButtonBundle::default(),
+                TrackedInteraction::default(),
+                ToolkitButtonWidget,
+            ),
+            spawn_children,
+        )
     }
 }

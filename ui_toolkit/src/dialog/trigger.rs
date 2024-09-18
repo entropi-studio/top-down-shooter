@@ -1,12 +1,25 @@
 use crate::dialog::types::ToolkitDialogType;
-use bevy::prelude::Event;
 use crate::dialog::ToolkitDialog;
+use bevy::prelude::Event;
 
-#[derive(Event)]
-pub struct ToolkitOpenDialogTrigger(pub ToolkitDialog);
+#[derive(Copy, Clone, PartialEq)]
+pub struct ToolkitDialogId(pub i32);
 
-impl From<ToolkitDialog> for ToolkitOpenDialogTrigger {
+impl ToolkitDialogId {
+    pub fn new() -> ToolkitDialogId {
+        Self(rand::random())
+    }
+}
+
+#[derive(Event, Clone)]
+pub struct ToolkitDialogOpenTrigger(pub ToolkitDialog, pub ToolkitDialogId);
+#[derive(Event, Clone)]
+pub struct ToolkitDialogCloseTrigger(pub ToolkitDialogId);
+#[derive(Event, Clone)]
+pub struct ToolkitDialogCloseAllTrigger;
+
+impl From<ToolkitDialog> for ToolkitDialogOpenTrigger {
     fn from(dialog: ToolkitDialog) -> Self {
-        Self(dialog)
+        Self(dialog, ToolkitDialogId::new())
     }
 }

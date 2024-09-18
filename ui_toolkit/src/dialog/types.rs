@@ -1,4 +1,4 @@
-use crate::prelude::ToolkitOpenDialogTrigger;
+use crate::prelude::{ToolkitDialogId, ToolkitDialogOpenTrigger};
 use bevy::prelude::Commands;
 use bevy::reflect::erased_serde::__private::serde::de::Unexpected::Str;
 
@@ -9,12 +9,14 @@ pub struct ToolkitDialog {
 }
 
 impl ToolkitDialog {
-    pub fn to_trigger(self) -> ToolkitOpenDialogTrigger {
-        ToolkitOpenDialogTrigger(self)
+    pub fn to_trigger(self) -> ToolkitDialogOpenTrigger {
+        ToolkitDialogOpenTrigger(self, ToolkitDialogId::new())
     }
 
-    pub fn open(self, commands: &mut Commands) {
-        commands.trigger(self.to_trigger());
+    pub fn open(self, commands: &mut Commands) -> ToolkitDialogId {
+        let trigger = self.to_trigger();
+        commands.trigger(trigger.clone());
+        trigger.1
     }
 }
 
@@ -40,8 +42,8 @@ impl ToolkitDialogBuilder {
         }
     }
 
-    pub fn open(self, commands: &mut Commands) {
-        self.build().open(commands);
+    pub fn open(self, commands: &mut Commands) -> ToolkitDialogId {
+        self.build().open(commands)
     }
 
     pub fn title(mut self, title: impl Into<String>) -> Self {

@@ -2,8 +2,8 @@ use crate::state::GameState;
 use bevy::app::{App, Plugin, Update};
 use bevy::prelude::{in_state, Commands, IntoSystemConfigs, NextState, ResMut, Startup};
 use bevy_egui::{egui, EguiContexts};
-use ui_toolkit::dialog::{ToolkitDialog, ToolkitDialogType, ToolkitOpenDialogTrigger};
-use ui_toolkit::prelude::ToolkitDialogBuilder;
+use ui_toolkit::dialog::{ToolkitDialog, ToolkitDialogType, ToolkitDialogOpenTrigger};
+use ui_toolkit::prelude::{ToolkitDialogBuilder, ToolkitDialogCloseAllTrigger};
 
 pub struct ScreenMainPlugin;
 
@@ -35,6 +35,7 @@ fn draw_ui(
         let _ = ui.button("Start");
         if ui.button("Editor").clicked() {
             state.set(GameState::Editor);
+            commands.trigger(ToolkitDialogCloseAllTrigger);
         }
         if ui.button("Dialog?").clicked() {
             ToolkitDialogBuilder::new()
