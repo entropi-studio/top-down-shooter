@@ -7,10 +7,7 @@ pub trait StyleBuilderExt {
 }
 
 impl StyleBuilderExt for UiBuilder<'_, Entity> {
-    fn apply_style(
-        &mut self,
-        build: impl FnOnce(&mut StyleBuilder),
-    ) -> &UiBuilder<'_, Entity> {
+    fn apply_style(&mut self, build: impl FnOnce(&mut StyleBuilder)) -> &UiBuilder<'_, Entity> {
         let mut style_builder = StyleBuilder::new();
         build(&mut style_builder);
         self.insert(DynamicStyle::from(style_builder));

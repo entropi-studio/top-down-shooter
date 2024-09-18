@@ -1,6 +1,7 @@
 use crate::dialog::render::*;
 use bevy::app::{App, Plugin};
 use bevy::prelude::Update;
+use crate::dialog::type_select::handle_dialog_select_option;
 
 pub(crate) struct ToolkitDialogPlugin;
 
@@ -15,6 +16,7 @@ impl Plugin for ToolkitDialogPlugin {
                     update_visibility,
                     cleanup_dialog,
                     handle_discard,
+                    handle_dialog_select_option
                 ),
             )
             .observe(on_open_dialog)

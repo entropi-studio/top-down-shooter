@@ -3626,6 +3626,7 @@ dependencies = [
  "bevy_infinite_grid",
  "lighting",
  "rand",
+ "sickle_ui",
  "strum",
  "strum_macros",
  "ui_toolkit",

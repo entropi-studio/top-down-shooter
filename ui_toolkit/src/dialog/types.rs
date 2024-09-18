@@ -1,11 +1,12 @@
 use crate::prelude::{ToolkitDialogId, ToolkitDialogOpenTrigger};
 use bevy::prelude::Commands;
-use bevy::reflect::erased_serde::__private::serde::de::Unexpected::Str;
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct ToolkitDialog {
     pub title: String,
     pub dialog_type: ToolkitDialogType,
+    pub timeout: Option<Duration>,
 }
 
 impl ToolkitDialog {
@@ -23,6 +24,7 @@ impl ToolkitDialog {
 pub struct ToolkitDialogBuilder {
     title: String,
     dialog_type: ToolkitDialogType,
+    timeout: Option<Duration>,
 }
 
 impl ToolkitDialogBuilder {
@@ -30,8 +32,9 @@ impl ToolkitDialogBuilder {
         Self {
             title: String::new(),
             dialog_type: ToolkitDialogType::Alert {
-                content: String::new(),
+                description: String::new(),
             },
+            timeout: None,
         }
     }
 
@@ -39,6 +42,7 @@ impl ToolkitDialogBuilder {
         ToolkitDialog {
             title: self.title,
             dialog_type: self.dialog_type,
+            timeout: self.timeout,
         }
     }
 
@@ -55,38 +59,100 @@ impl ToolkitDialogBuilder {
         self.dialog_type = dialog_type;
         self
     }
+
+    pub fn timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = Some(timeout);
+        self
+    }
+
+    pub fn timeout_none(mut self) -> ToolkitDialogBuilder {
+        self.timeout = None;
+        self
+    }
 }
 
 #[derive(Clone)]
 pub enum ToolkitDialogType {
-    Alert { content: String },
+    Alert { description: String },
+    Select {
+        description: String,
+        options: Vec<String>,
+        dismissable: bool,
+    },
 }
 
 impl ToolkitDialogType {
     pub fn alert_builder() -> ToolkitDialogTypeAlertBuilder {
         ToolkitDialogTypeAlertBuilder::new()
     }
+
+    pub fn select_builder() -> ToolkitDialogTypeSelectBuilder {
+        ToolkitDialogTypeSelectBuilder::new()
+    }
 }
 
 pub struct ToolkitDialogTypeAlertBuilder {
-    content: String,
+    description: String,
 }
-
 impl ToolkitDialogTypeAlertBuilder {
     pub fn new() -> Self {
         Self {
-            content: String::new(),
+            description: String::new(),
         }
     }
 
     pub fn build(self) -> ToolkitDialogType {
         ToolkitDialogType::Alert {
-            content: self.content,
+            description: self.description,
         }
     }
 
-    pub fn content(mut self, content: impl Into<String>) -> Self {
-        self.content = content.into();
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = description.into();
+        self
+    }
+}
+
+pub struct ToolkitDialogTypeSelectBuilder {
+    description: String,
+    options: Vec<String>,
+    dismissable: bool,
+}
+
+impl ToolkitDialogTypeSelectBuilder {
+    pub fn new() -> Self {
+        Self {
+            description: String::new(),
+            options: vec![],
+            dismissable: false,
+        }
+    }
+
+    pub fn build(self) -> ToolkitDialogType {
+        ToolkitDialogType::Select {
+            description: self.description,
+            options: self.options,
+            dismissable: self.dismissable,
+        }
+    }
+
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = description.into();
+        self
+    }
+
+    pub fn dismissable(mut self) -> Self {
+        self.dismissable = true;
+        self
+    }
+
+    pub fn not_dismissable(mut self) -> ToolkitDialogTypeSelectBuilder {
+        self.dismissable = false;
+        self
+    }
+
+    pub fn option(mut self, text: impl Into<String>) -> ToolkitDialogTypeSelectBuilder {
+        self.options.push(text.into());
         self
     }
 }

@@ -23,7 +23,7 @@ impl Plugin for BasePlugin {
         }))
         .add_plugins(EguiPlugin)
         .add_plugins(UiToolkitPlugin)
-            .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(WorldInspectorPlugin::new())
         // .add_plugins((
         //     FrameTimeDiagnosticsPlugin::default(),
         //     LogDiagnosticsPlugin::default(),
